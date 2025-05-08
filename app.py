@@ -3,24 +3,29 @@ import re
 from collections import Counter
 from nltk.util import ngrams
 import matplotlib.pyplot as plt
-from matplotlib import rcParams
+from matplotlib import font_manager as fm
+from indicnlp.tokenize import indic_tokenize
 
-# Set Devanagari-compatible font
-rcParams['font.family'] = 'Noto Sans Devanagari'
+# --- Load custom Devanagari font ---
+font_path = os.path.join('fonts', 'NotoSansDevanagari-VariableFont_wdth,wght.ttf')
+prop = fm.FontProperties(fname=font_path)
+plt.rcParams['font.family'] = prop.get_name()
 
-
-# Ensure output directory exists
+# --- Ensure output directory exists ---
 os.makedirs('output', exist_ok=True)
 
-# Step 1: Load and clean text
+# --- Load and clean text ---
 with open('data/sample.txt', 'r', encoding='utf-8') as file:
     text = file.read().lower()
     text = re.sub(r'[^\w\s]', '', text)
 
-# Step 2: Tokenize
-tokens = text.split()
+# --- Nepali tokenization using indic-nlp ---
+def tokenize_nepali(text):
+    return list(indic_tokenize.trivial_tokenize(text, lang='ne'))
 
-# Step 3: N-gram functions
+tokens = tokenize_nepali(text)
+
+# --- N-gram logic ---
 def get_ngrams(tokens, n):
     return list(ngrams(tokens, n))
 
@@ -38,9 +43,11 @@ def save_ngram_plot(tokens, n):
 
     plt.figure(figsize=(10, 6))
     plt.barh(labels, values, color='skyblue')
-    plt.xlabel("Frequency")
-    plt.title(f"Top 10 {n}-grams")
+    plt.xlabel("Frequency", fontproperties=prop)
+    plt.title(f"Top 10 {n}-grams", fontproperties=prop)
     plt.gca().invert_yaxis()
+    plt.xticks(fontproperties=prop)
+    plt.yticks(fontproperties=prop)
     plt.tight_layout()
 
     filename = f'output/{n}_gram_chart.png'
@@ -58,7 +65,7 @@ def print_ngrams(tokens, n):
 
     save_ngram_plot(tokens, n)
 
-# Step 4: Run for unigrams, bigrams, trigrams
+# --- Run for unigrams, bigrams, trigrams ---
 print_ngrams(tokens, 1)
 print_ngrams(tokens, 2)
 print_ngrams(tokens, 3)
